@@ -1,5 +1,5 @@
 # mebmjr
-my personal version of mebm
+my version of mebm
 <br>
 live at: https://paritojr.github.io/mebmjr
 
