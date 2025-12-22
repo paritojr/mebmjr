@@ -1483,13 +1483,16 @@ window.addEventListener('keydown', function(ev) {
   }
 });
 
-function popup(text) {
+function popup(text, handler) {
   const div = document.createElement('div');
   div.addEventListener('keydown', function(ev) {
     ev.stopPropagation();
   });
   const close = document.createElement('a');
   close.addEventListener('click', function() {
+    if (handler && typeof handler === 'function') {
+      handler();
+    }
     div.remove();
   });
   close.textContent = "[x]";
@@ -1635,35 +1638,9 @@ function getSupportedMimeTypes() {
     "mp4",
     "x-matroska"
   ];
-  const VIDEO_CODECS = [
-    "vp9",
-    "vp9.0",
-    "vp8",
-    "vp8.0",
-    "avc1",
-    "av1",
-    "h265",
-    "h.265",
-    "h264",
-    "h.264",
-    "opus",
-  ];
-
   const supportedTypes = [];
   VIDEO_TYPES.forEach((videoType) => {
     const type = `video/${videoType}`;
-    VIDEO_CODECS.forEach((codec) => {
-      const variations = [
-        `${type};codecs=${codec}`,
-        `${type};codecs:${codec}`,
-        `${type};codecs=${codec.toUpperCase()}`,
-        `${type};codecs:${codec.toUpperCase()}`
-      ]
-      variations.forEach(variation => {
-        if (MediaRecorder.isTypeSupported(variation))
-          supportedTypes.push(variation);
-      })
-    });
     if (MediaRecorder.isTypeSupported(type)) supportedTypes.push(type);
   });
   return supportedTypes;
@@ -1678,43 +1655,61 @@ function download(ev) {
     alert("nothing to export");
     return;
   }
-  const e = document.getElementById('export');
-  const e_text = e.textContent;
-  e.textContent = "exporting...";
-  const chunks = [];
-  const stream = player.canvas.captureStream();
-
-  let has_audio = false;
-  for (let layer of player.layers) {
-    if (layer instanceof AudioLayer) {
-      has_audio = true;
-      break;
-    }
-  }
-  if (has_audio) {
-    let dest = player.audio_ctx.createMediaStreamDestination();
-    player.audio_dest = dest;
-    let tracks = dest.stream.getAudioTracks();
-    stream.addTrack(tracks[0]);
-  }
-  const rec = new MediaRecorder(stream);
-  rec.ondataavailable = e => chunks.push(e.data);
   const available_types = getSupportedMimeTypes();
   if (available_types.length == 0) {
     alert("cannot export! please use a screen recorder instead");
+    return;
   }
-  rec.onstop = e => exportVideo(new Blob(chunks, {
-    type: available_types[0],
-  }));
-  player.pause();
-  player.time = 0;
-  player.play();
-  rec.start();
-  player.onend(function(p) {
-    rec.stop();
-    player.audio_dest = null;
-    e.textContent = e_text;
+  let format = available_types[0];
+  var settings = new Settings();
+  settings.add('video format', null,
+    select => {
+      available_types.forEach(value => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value.includes("video/") ? value.replace("video/", "") : value;
+        select.appendChild(opt);
+      });
+      select.value = format;
+    },
+    e => format = e.target.value,
+    'select'
+  )
+  popup(settings.div, () => {
+    const e = document.getElementById('export');
+    const e_text = e.textContent;
+    e.textContent = "exporting...";
+    const chunks = [];
+    const stream = player.canvas.captureStream();
+    
+    let has_audio = false;
+    for (let layer of player.layers) {
+      if (layer instanceof AudioLayer) {
+        has_audio = true;
+        break;
+      }
+    }
+    if (has_audio) {
+      let dest = player.audio_ctx.createMediaStreamDestination();
+      player.audio_dest = dest;
+      let tracks = dest.stream.getAudioTracks();
+      stream.addTrack(tracks[0]);
+    }
+    const rec = new MediaRecorder(stream);
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = e => exportVideo(new Blob(chunks, {
+      type: format,
+    }));
     player.pause();
     player.time = 0;
+    player.play();
+    rec.start();
+    player.onend(function(p) {
+      rec.stop();
+      player.audio_dest = null;
+      e.textContent = e_text;
+      player.pause();
+      player.time = 0;
+    });
   });
 }
