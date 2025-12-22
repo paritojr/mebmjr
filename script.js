@@ -4,8 +4,10 @@ function backgroundElem(elem) {
 }
 
 const dpr = window.devicePixelRatio || 1;
+const available_types = getSupportedMimeTypes();
 let fps = 24;
 let max_size = 4000 * 1e6 / 4; // 4GB max
+let format = available_types[0] || "cant export";
 
 // todo: add more types
 const ext_map = {
@@ -61,6 +63,19 @@ function updateSettings() {
   settings.add('max RAM (in MB)', 'text',
     e => e.value = (max_size / 1e6).toFixed(2),
     e => max_size = 1e6 * Number.parseInt(e.target.value)
+    );
+  settings.add('export format', null,
+    select => {
+      available_types.forEach(value => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value.includes("video/") ? value.replace("video/", "") : value;
+        select.appendChild(opt);
+      });
+      select.value = format;
+    },
+    e => format = e.target.value,
+    'select'
     );
   popup(settings.div);
 }
@@ -1483,16 +1498,13 @@ window.addEventListener('keydown', function(ev) {
   }
 });
 
-function popup(text, handler) {
+function popup(text) {
   const div = document.createElement('div');
   div.addEventListener('keydown', function(ev) {
     ev.stopPropagation();
   });
   const close = document.createElement('a');
   close.addEventListener('click', function() {
-    if (handler && typeof handler === 'function') {
-      handler();
-    }
     div.remove();
   });
   close.textContent = "[x]";
@@ -1536,6 +1548,9 @@ window.addEventListener('load', function() {
       <br>
       a demo can be found <a href="https://bwasti.github.io/mebm/#https%3A%2F%2Fjott.live%2Fraw%2Ftutorial.json" target="_blank">here</a>
       and usage information <a href="https://github.com/bwasti/mebm#usage" target="_blank">here</a>.
+      <br>
+      <br>
+      you can also change the export format, fps and max ram <br> by clicking the 3 dots and going to the settings.
       `;
     popup(text);
     localStorage.setItem('_seen', 'true');
@@ -1579,6 +1594,7 @@ function exportVideo(blob) {
       a.textContent = 'download';
     }
     a.href = vid.src;
+    a.download = (new Date()).getTime() + '.' + extension;
     document.getElementById('header').appendChild(a);
   }
   vid.ontimeupdate = function() {
@@ -1654,61 +1670,43 @@ function download(ev) {
     alert("nothing to export");
     return;
   }
-  const available_types = getSupportedMimeTypes();
   if (available_types.length == 0) {
     alert("cannot export! please use a screen recorder instead");
     return;
   }
-  let format = available_types[0];
-  var settings = new Settings();
-  settings.add('video format', null,
-    select => {
-      available_types.forEach(value => {
-        const opt = document.createElement('option');
-        opt.value = value;
-        opt.textContent = value.includes("video/") ? value.replace("video/", "") : value;
-        select.appendChild(opt);
-      });
-      select.value = format;
-    },
-    e => format = e.target.value,
-    'select'
-  )
-  popup(settings.div, () => {
-    const e = document.getElementById('export');
-    const e_text = e.textContent;
-    e.textContent = "exporting...";
-    const chunks = [];
-    const stream = player.canvas.captureStream();
-    
-    let has_audio = false;
-    for (let layer of player.layers) {
-      if (layer instanceof AudioLayer) {
-        has_audio = true;
-        break;
-      }
+  const e = document.getElementById('export');
+  const e_text = e.textContent;
+  e.textContent = "exporting...";
+  const chunks = [];
+  const stream = player.canvas.captureStream();  
+  
+  let has_audio = false;
+  for (let layer of player.layers) {
+    if (layer instanceof AudioLayer) {
+      has_audio = true;
+      break;
     }
-    if (has_audio) {
-      let dest = player.audio_ctx.createMediaStreamDestination();
-      player.audio_dest = dest;
-      let tracks = dest.stream.getAudioTracks();
-      stream.addTrack(tracks[0]);
-    }
-    const rec = new MediaRecorder(stream);
-    rec.ondataavailable = e => chunks.push(e.data);
-    rec.onstop = e => exportVideo(new Blob(chunks, {
-      type: format,
-    }));
+  }
+  if (has_audio) {
+    let dest = player.audio_ctx.createMediaStreamDestination();
+    player.audio_dest = dest;
+    let tracks = dest.stream.getAudioTracks();
+    stream.addTrack(tracks[0]);
+  }
+  const rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => chunks.push(e.data);
+  rec.onstop = e => exportVideo(new Blob(chunks, {
+    type: format,
+  }));
+  player.pause();
+  player.time = 0;
+  player.play();
+  rec.start();
+  player.onend(function(p) {
+    rec.stop();
+    player.audio_dest = null;
+    e.textContent = e_text;
     player.pause();
     player.time = 0;
-    player.play();
-    rec.start();
-    player.onend(function(p) {
-      rec.stop();
-      player.audio_dest = null;
-      e.textContent = e_text;
-      player.pause();
-      player.time = 0;
-    });
   });
 }
