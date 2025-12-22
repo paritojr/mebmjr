@@ -1563,7 +1563,6 @@ function add_text() {
 }
 
 function exportVideo(blob) {
-  alert("Warning: exported video may need to be fixed with cloudconvert.com or similar tools");
   const vid = document.createElement('video');
   vid.controls = true;
   vid.src = URL.createObjectURL(blob);
