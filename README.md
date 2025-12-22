@@ -1,7 +1,9 @@
-# mebmjr
-my version of mebm
+<div align="center">
+<h2>mebmjr</h2>
+🎥 my version of mebm
 <br>
 live at: https://paritojr.github.io/mebmjr
+</div>
 
 ## why did i make this?
 well, uhh... see...
@@ -17,16 +19,22 @@ and btw, yes ik that i can make pull requests but it takes a lot of time, and al
 
 ## license
 this thing was made originally by [bwasti](https://github.com/bwasti) (check him out!), so ofc, i will put the original license from his repo :)
-
+<br>
+its MIT license btw
 ## faq
-why is it named "mebmjr"?
+**why is it named "mebmjr"?**
 <br>
 uhh... mebm + the last 2 digits of my pseudoname = mebmjr
 
-what features does YOUR version have compared to the original mebm?
+**what features does YOUR version have compared to the original mebm?**
 <br>
-well, uhh... image rotation and font selection, thats it
+well, uhh... lemme show you sum features i added:
+- font customization
+- image rotation
+- video export format customization
 <br>
 i promise i will add more features i swear
 
-lol
+uhh... arent you gonna visit the site?
+<br>
+pls?
