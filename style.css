@@ -142,6 +142,10 @@ a:visited {
   cursor: pointer;
 }
 
+#header div:hover {
+  background-color: #555;
+}
+
 #layers .preview {
   font-size: 12px;
   word-break: break-all;
