@@ -36,7 +36,10 @@ class Settings {
     this.holder.classList.toggle('holder');
     this.div.appendChild(this.holder);
     const ok = document.createElement('a');
-    ok.textContent = '[apply]'
+    ok.addEventListener('click', function() {
+      this.parentElement.parentElement.remove();
+    });
+    ok.textContent = '[apply]';
     this.div.appendChild(ok);
   }
 
