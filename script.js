@@ -28,7 +28,7 @@ const ext_map = {
   'weba': 'audio/webm',
   };
 
-if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
+if(/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
   document.getElementById('stylesheet').setAttribute('href', 'mobile.css');
 }
 
