@@ -1,5 +1,5 @@
 <div align="center">
-<h2>mebmjr</h2>
+<h1>mebmjr</h1>
 🎥 my version of mebm
 <br>
 live at: https://paritojr.github.io/mebmjr
